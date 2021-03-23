@@ -1,0 +1,41 @@
+stages:
+  - stage: BuildAndTest
+    jobs:
+      - job: BuildAndTest
+        steps:
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet build'
+            inputs:
+              command: build
+              projects: '**/*.sln'
+              arguments: '--configuration Release'
+
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'test'
+              projects: '**/*.sln'
+
+  - stage: Containerize
+    jobs:
+      - job: Containerize
+        steps:
+          - task: Docker@2
+            inputs:
+              containerRegistry: 'ACR-Test'
+              repository: 'demoapi'
+              command: 'buildAndPush'
+              Dockerfile: '**/Dockerfile'
+              buildContext: 'src'
+              tags: |
+                $(Build.BuildNumber)
+                development
+
+          - task: Kubernetes@1
+            inputs:
+              connectionType: 'Kubernetes Service Connection'
+              kubernetesServiceEndpoint: 'Jordan AKS'
+              namespace: 'development'
+              command: 'rollout'
+              arguments: 'restart deployment demo-api'
+              secretType: 'dockerRegistry'
+              containerRegistryType: 'Azure Container Registry'
