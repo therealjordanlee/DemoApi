@@ -25,5 +25,11 @@ namespace DemoApi.Controllers
         {
             return Ok(_messageSettings.CurrentValue.SecretMessage);
         }
+        
+        [HttpGet("blah")]
+        public IActionResult GetSecretMessage()
+        {
+            return Ok("blah");
+        }
     }
 }
